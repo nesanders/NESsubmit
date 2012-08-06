@@ -21,6 +21,10 @@ If you have comments or questions about this script, please leave comments at:
 
 http://astrobites.com/2012/08/05/how-to-submit-a-paper/
 
+or submit bug reports at:
+
+https://github.com/nesanders/NESsubmit/issues
+
 """
 
 import os,sys
