@@ -33,7 +33,7 @@ print sys.argv
 if len(sys.argv)>1: mainfile=sys.argv[1]
 else: 
   print "You must specify a main tex file"
-if len(sys.argv)>2: mainfile=sys.argv[2]
+if len(sys.argv)>2: outdir=sys.argv[2]
 else: outdir='submit'
 
 ##Clean directory
@@ -52,7 +52,9 @@ def ostrip(thefile):
     f=open(thefile,'r')
     for line in f:
         if line[0]!='%':
-            if '%' in line: outlines.append(line.split(' %')[0]+'\n')
+            if '%' in line: 
+              if '\%' in line or line[-1] == '%': outlines.append(line) # these are not real comments
+              else: outlines.append(line.split(' %')[0]+'\n')
             else: outlines.append(line)
     return outlines
 
@@ -61,19 +63,40 @@ def dofigure(line):
     Function to take care of figures
     """
     global fnum
-    imname=line.split('{')[1].split('}')[0]
     if 'onlineonlycolor' not in line: fnum+=1
-    #print name and number
-    print fnum,imname
-    subname=imname.split('/')[-1]
-    ftype=subname.split('.')[-1]
-    ##rename with number if desired
-    subname='f'+str(fnum)+'.'+ftype
-    outname=outdir+'/'+subname
-    ##copy over
-    os.system("cp "+imname+" "+outname)            
-    ##write out plot string
-    return line.replace(imname,subname)
+    imname=line.split('{')[1].split('}')[0]
+    if 'plottwo' in line: 
+      imname2=line.split('{')[2].split('}')[0] 
+      #print name and number
+      print fnum+'a',imname
+      print fnum+'b',imname2
+      subname=imname.split('/')[-1]
+      subname2=imname2.split('/')[-1]
+      ftype=subname.split('.')[-1]
+      ##rename with number if desired
+      subname='f'+str(fnum)+'a.'+ftype
+      outname=outdir+'/'+subname
+      subname2='f'+str(fnum)+'b.'+ftype
+      outname2=outdir+'/'+subname2
+      ##copy over
+      os.system("cp "+imname+" "+outname)
+      os.system("cp "+imname2+" "+outname2)
+      ##write out plot string
+      newline = line.replace(imname,subname)
+      newline = newline.replace(imname2,subname2)
+    else:
+      #print name and number
+      print fnum,imname
+      subname=imname.split('/')[-1]
+      ftype=subname.split('.')[-1]
+      ##rename with number if desired
+      subname='f'+str(fnum)+'.'+ftype
+      outname=outdir+'/'+subname
+      ##copy over
+      os.system("cp "+imname+" "+outname)
+      ##write out plot string
+      newline = line.replace(imname,subname)
+    return(newline)
 
 
 ##do includes - only goes one level in
@@ -130,7 +153,7 @@ f.close()
 
 ##tar up
 os.chdir(outdir)
-os.system('tar -czf '+'ApJ.tar *.tex *.eps --exclude "arxiv.tex"')
+os.system('tar -czf '+'ApJ.tar.gz *.tex *.eps --exclude "arxiv.tex"')
 ##readme
 os.system('echo "For ApJ, simply upload the tarball.  For the arXiv, upload all the figures plus the arxiv.tex file, NOT the apj.tex" > README')
 os.chdir('..')
