@@ -47,14 +47,20 @@ for line in mainlines:
     if '\input' in line:
         incfile=line.split('{')[1].split('}')[0]
         ##if there is no extension, assume it is a .tex
-        if len(incfile.split('.'))==1: incfile=incfile+'.tex'
-        for subline in ostrip(incfile):
+        if len(incfile.split('.'))==1: incfile_e=incfile+'.tex'
+        else: incfile_e=incfile
+        #Append any text before the include
+        outlines.append(line.split('\input{'+incfile+'}')[0])
+        #Append each line from the input file
+        for subline in ostrip(incfile_e):
             ##rotate long tables
             #if 'scriptsize' in subline: outlines.append(r'\rotate'+'\n')
             if '.eps' in subline or '.pdf' in subline:
                 outlines.append(dofigure(subline))
             else:
                 outlines.append(subline)
+        #Append any text after the include
+        outlines.append(line.split('\input{'+incfile+'}')[1])
     ##don't emulateapj
     elif '{emulateapj}' in line: outlines.append(r'\documentclass[manuscript]{aastex}'+'\n')
     elif r'\LongTables' in line: outlines.append('')
