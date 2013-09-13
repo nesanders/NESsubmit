@@ -1,102 +1,43 @@
-"""
-This is a script to format and package a scientific paper written in latex for
-upload to the journal (using aastex) and the arXiv (assuming emulateapj).
+mainfile='ps112sk.tex'
+outdir='NESsubmit'
 
-It will make numbered copies of all the figures, strip out latex comments, 
-copy in the compiled BibTex biliography, and combine any \input latex sources 
-into a single tex file.
-
-Run this script from inside a directory with a compiled paper with the syntax: 
-python NESsubmit.py myfile.tex outputdir
-
-The outputdir is the directory where the program output will be written. 
-If the directory already exists, it will be overwritten.
-
-----
-
-Written by Nathan Sanders, 2012
-https://www.cfa.harvard.edu/~nsanders/index.htm
-
-If you have comments or questions about this script, please leave comments at:
-
-http://astrobites.com/2012/08/05/how-to-submit-a-paper/
-
-or submit bug reports at:
-
-https://github.com/nesanders/NESsubmit/issues
-
-"""
-
-import os,sys
-
-print sys.argv
-if len(sys.argv)>1: mainfile=sys.argv[1]
-else: 
-  print "You must specify a main tex file"
-if len(sys.argv)>2: outdir=sys.argv[2]
-else: outdir='submit'
+import os
 
 ##Clean directory
 os.system('rm -rf '+outdir)
 os.system('mkdir '+outdir)
 
-#start figure numbering at 1
+#star figure numbering at 1
 global fnum
 fnum=0
 
+##Function to open a tex file and strip it of comments
 def ostrip(thefile):
-    """
-    Function to open a tex file and strip it of comments
-    """
     outlines=[]
     f=open(thefile,'r')
     for line in f:
         if line[0]!='%':
-            if '%' in line: 
-              if '\%' in line or line[-1] == '%': outlines.append(line) # these are not real comments
-              else: outlines.append(line.split(' %')[0]+'\n')
+            if '%' in line: outlines.append(line.split(' %')[0]+'\n')
             else: outlines.append(line)
     return outlines
 
+# function to take care of figures
 def dofigure(line):
-    """
-    Function to take care of figures
-    """
     global fnum
-    if 'onlineonlycolor' not in line: fnum+=1
     imname=line.split('{')[1].split('}')[0]
-    if 'plottwo' in line: 
-      imname2=line.split('{')[2].split('}')[0] 
-      #print name and number
-      print fnum+'a',imname
-      print fnum+'b',imname2
-      subname=imname.split('/')[-1]
-      subname2=imname2.split('/')[-1]
-      ftype=subname.split('.')[-1]
-      ##rename with number if desired
-      subname='f'+str(fnum)+'a.'+ftype
-      outname=outdir+'/'+subname
-      subname2='f'+str(fnum)+'b.'+ftype
-      outname2=outdir+'/'+subname2
-      ##copy over
-      os.system("cp "+imname+" "+outname)
-      os.system("cp "+imname2+" "+outname2)
-      ##write out plot string
-      newline = line.replace(imname,subname)
-      newline = newline.replace(imname2,subname2)
-    else:
-      #print name and number
-      print fnum,imname
-      subname=imname.split('/')[-1]
-      ftype=subname.split('.')[-1]
-      ##rename with number if desired
-      subname='f'+str(fnum)+'.'+ftype
-      outname=outdir+'/'+subname
-      ##copy over
-      os.system("cp "+imname+" "+outname)
-      ##write out plot string
-      newline = line.replace(imname,subname)
-    return(newline)
+    if 'onlineonlycolor' not in line: fnum+=1
+    #print name and number
+    print fnum,imname
+    subname=imname.split('/')[-1]
+    ftype=subname.split('.')[-1]
+    ##rename with number if desired
+    subname='f'+str(fnum)+'.'+ftype
+    outname=outdir+'/'+subname
+    ##copy over
+    os.system("cp "+imname+" "+outname)            
+    ##write out plot string
+    return line.replace(imname,subname)
+
 
 
 ##do includes - only goes one level in
@@ -106,31 +47,25 @@ for line in mainlines:
     if '\input' in line:
         incfile=line.split('{')[1].split('}')[0]
         ##if there is no extension, assume it is a .tex
-        if len(incfile.split('.'))==1: incfile_e=incfile+'.tex'
-        else: incfile_e=incfile
-        #Append any text before the include
-        outlines.append(line.split('\input{'+incfile+'}')[0])
-        #Append each line from the input file
-        for subline in ostrip(incfile_e):
+        if len(incfile.split('.'))==1: incfile=incfile+'.tex'
+        for subline in ostrip(incfile):
             ##rotate long tables
             #if 'scriptsize' in subline: outlines.append(r'\rotate'+'\n')
-            if '.eps' in subline:
+            if '.eps' in subline or '.pdf' in subline:
                 outlines.append(dofigure(subline))
             else:
                 outlines.append(subline)
-        #Append any text after the include
-        outlines.append(line.split('\input{'+incfile+'}')[1])
     ##don't emulateapj
     elif '{emulateapj}' in line: outlines.append(r'\documentclass[manuscript]{aastex}'+'\n')
     elif r'\LongTables' in line: outlines.append('')
     ##input bibliography
     elif r'\bibliography{' in line:
-        bibname=line.split('{')[1].split('}')[0].replace('.bib','')+'.bbl'
+        bibname=mainfile.replace('.tex','')+'.bbl'  #line.split('{')[1].split('}')[0]
         biblines=ostrip(bibname)
         for subline in biblines:
             outlines.append(subline)
     ##figures
-    elif r'.eps' in line or '.ps' in line:
+    elif r'.eps' in line or '.ps' in line or '.pdf' in line:
         outlines.append(dofigure(line))
     else:
         outlines.append(line)
@@ -157,9 +92,27 @@ for line in outlines:
 f.close()
 
 
+
+##identify eps figures and bibliography
+#f=open(outfile,'r')
+#for line in f:
+    #if '.eps' in line:
+        #imname=line.split('{')[1].split('}')[0]
+        #if 'onlineonlycolor' not in line: fnum+=1
+        ##print name and number
+        #print fnum,imname
+        #outname=outdir+'/'+imname.split('/')[-1]
+        ###copy over
+        #os.system("cp "+imname+" "+outname)
+    ##if r'\bibliography{' in line:
+        ##bibname=line.split('{')[1].split('}')[0]+'.bib'
+        ##outname=outdir+'/'+bibname.split('/')[-1]
+        ##os.system("cp "+bibname+" "+outname)
+#f.close()
+
 ##tar up
 os.chdir(outdir)
-os.system('tar -czf '+'ApJ.tar.gz *.tex *.eps --exclude "arxiv.tex"')
+os.system('tar -czf '+'ApJ.tar *.tex *.eps *.pdf --exclude "arxiv.tex"')
 ##readme
 os.system('echo "For ApJ, simply upload the tarball.  For the arXiv, upload all the figures plus the arxiv.tex file, NOT the apj.tex" > README')
 os.chdir('..')
