@@ -2,14 +2,14 @@
 This is a script to format and package a scientific paper written in latex for
 upload to the journal (using aastex) and the arXiv (assuming emulateapj).
 
-It will make numbered copies of all the figures, strip out latex comments, 
-copy in the compiled BibTex biliography, and combine any \input latex sources 
+It will make numbered copies of all the figures, strip out latex comments,
+copy in the compiled BibTex biliography, and combine any \input latex sources
 into a single tex file.
 
-Run this script from inside a directory with a compiled paper with the syntax: 
+Run this script from inside a directory with a compiled paper with the syntax:
 python NESsubmit.py myfile.tex outputdir
 
-The outputdir is the directory where the program output will be written. 
+The outputdir is the directory where the program output will be written.
 If the directory already exists, it will be overwritten.
 
 ----
@@ -32,7 +32,7 @@ import os,sys
 
 print(sys.argv)
 if len(sys.argv)>1: mainfile=sys.argv[1]
-else: 
+else:
   print("You must specify a main tex file")
 if len(sys.argv)>2: outdir=sys.argv[2]
 else: outdir='submit'
@@ -53,7 +53,7 @@ def ostrip(thefile):
     f=open(thefile,'r')
     for line in f:
         if line[0]!='%':
-            if '%' in line: 
+            if '%' in line:
               if '\%' in line or line[-1] == '%': outlines.append(line) # these are not real comments
               else: outlines.append(line.split(' %')[0]+'\n')
             else: outlines.append(line)
@@ -66,8 +66,8 @@ def dofigure(line):
     global fnum
     if 'onlineonlycolor' not in line: fnum+=1
     imname=line.split('{')[1].split('}')[0]
-    if 'plottwo' in line: 
-      imname2=line.split('{')[2].split('}')[0] 
+    if 'plottwo' in line:
+      imname2=line.split('{')[2].split('}')[0]
       #print name and number
       print(fnum+'a',imname)
       print(fnum+'b',imname2)
