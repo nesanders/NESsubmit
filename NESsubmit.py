@@ -26,13 +26,14 @@ or submit bug reports at:
 https://github.com/nesanders/NESsubmit/issues
 
 """
+from __future__ import print_function
 
 import os,sys
 
-print sys.argv
+print(sys.argv)
 if len(sys.argv)>1: mainfile=sys.argv[1]
 else: 
-  print "You must specify a main tex file"
+  print("You must specify a main tex file")
 if len(sys.argv)>2: outdir=sys.argv[2]
 else: outdir='submit'
 
@@ -68,8 +69,8 @@ def dofigure(line):
     if 'plottwo' in line: 
       imname2=line.split('{')[2].split('}')[0] 
       #print name and number
-      print fnum+'a',imname
-      print fnum+'b',imname2
+      print(fnum+'a',imname)
+      print(fnum+'b',imname2)
       subname=imname.split('/')[-1]
       subname2=imname2.split('/')[-1]
       ftype=subname.split('.')[-1]
@@ -86,7 +87,7 @@ def dofigure(line):
       newline = newline.replace(imname2,subname2)
     else:
       #print name and number
-      print fnum,imname
+      print(fnum,imname)
       subname=imname.split('/')[-1]
       ftype=subname.split('.')[-1]
       ##rename with number if desired
