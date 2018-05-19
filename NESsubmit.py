@@ -152,28 +152,23 @@ for line in mainlines:
 
 
 # Write out ApJ version
-outfile = outdir+'/apj.tex'
-f = open(outfile, 'w')
-for line in outlines:
-    # don't need two-column deluxetables for apJ
-    line = line.replace('deluxetable*', 'deluxetable')
-    if 'aas_macros' not in line:
-        f.write(line)
-
-f.close()
+outfile = os.path.join(outdir, 'apj.tex')
+with open(outfile, 'w') as f:
+    for line in outlines:
+        # don't need two-column deluxetables for apJ
+        line = line.replace('deluxetable*', 'deluxetable')
+        if 'aas_macros' not in line:
+            print(line, file=f, end='')
 
 # Write out arXiv version
-outfile = outdir+'/arxiv.tex'
-f = open(outfile, 'w')
-for line in outlines:
-    if '{aastex}' in line:
-        newline = r'\documentclass{emulateapj}'+'\n'
-    else:
-        newline = line
-    f.write(newline)
-
-f.close()
-
+outfile = os.path.join(outdir, 'arxiv.tex')
+with open(outfile, 'w') as f:
+    for line in outlines:
+        if '{aastex}' in line:
+            newline = r'\documentclass{emulateapj}'+'\n'
+        else:
+            newline = line
+        print(newline, file=f, end='')
 
 # tar up
 os.chdir(outdir)
