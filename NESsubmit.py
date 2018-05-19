@@ -28,6 +28,7 @@ https://github.com/nesanders/NESsubmit/issues
 """
 from __future__ import print_function
 
+import re
 import os
 import sys
 
@@ -68,6 +69,34 @@ def ostrip(thefile):
     return outlines
 
 
+def isfigure(line):
+    """True if this looks like a figure line.
+    """
+    return re.search("(includegraphics|plotone|plottwo)", line)
+
+
+def findfigure(name):
+    """Return name of image file in current working directory with
+    this root"""
+    found = None
+    if "." in name:
+        if os.path.exists(name):
+            found = name
+    elif "." not in name:
+        for suffix in (".pdf", ".eps", ".ps", ".JPG", ".jpg", ".png"):
+            testfile = name + suffix
+            if os.path.exists(testfile):
+                found = testfile
+    if found is None:
+        raise RuntimeError("Could not find image file {}".format(name))
+    return found, os.path.splitext(found)[-1]
+
+
+def outfigname(num, ext, char=""):
+    """Form output file name."""
+    return "f{}{}{}".format(num, char, ext)
+
+
 def dofigure(line):
     """
     Function to take care of figures
@@ -75,38 +104,41 @@ def dofigure(line):
     global fnum
     if 'onlineonlycolor' not in line:
         fnum += 1
-    imname = line.split('{')[1].split('}')[0]
+    locate = re.search(r"\{([\w\d\-_]+)\}", line)
+    if not locate:
+        raise RuntimeError("Could not find image in line '{}'".format(line))
+    imagetext = locate.group(1)
+    imname, ftype = findfigure(imagetext)
     if 'plottwo' in line:
         imname2 = line.split('{')[2].split('}')[0]
         # print name and number
         print(fnum+'a', imname)
         print(fnum+'b', imname2)
-        subname = imname.split('/')[-1]
-        subname2 = imname2.split('/')[-1]
-        ftype = subname.split('.')[-1]
+        _, subname = os.path.split(imname)
+        _, subname2 = os.path.split(imname2)
+        ftype = os.path.splitext(subname)
         # rename with number if desired
-        subname = 'f'+str(fnum)+'a.'+ftype
-        outname = outdir+'/'+subname
-        subname2 = 'f'+str(fnum)+'b.'+ftype
-        outname2 = outdir+'/'+subname2
+        subname = outfigname(fnum, ftype, char="a")
+        outname = os.path.join(outdir, subname)
+        subname2 = outfigname(fnum, ftype, char="b")
+        outname2 = os.path.join(outdir, subname2)
         # copy over
         os.system("cp "+imname+" "+outname)
         os.system("cp "+imname2+" "+outname2)
         # write out plot string
-        newline = line.replace(imname, subname)
+        newline = line.replace(imagetext, subname)
         newline = newline.replace(imname2, subname2)
     else:
         # print name and number
         print(fnum, imname)
-        subname = imname.split('/')[-1]
-        ftype = subname.split('.')[-1]
+        _, subname = os.path.split(imname)
         # rename with number if desired
-        subname = 'f'+str(fnum)+'.'+ftype
-        outname = outdir+'/'+subname
+        subname = outfigname(fnum, ftype)
+        outname = os.path.join(outdir, subname)
         # copy over
         os.system("cp "+imname+" "+outname)
         # write out plot string
-        newline = line.replace(imname, subname)
+        newline = line.replace(imagetext, subname)
     return(newline)
 
 
@@ -130,7 +162,7 @@ for line in mainlines:
         for subline in ostrip(incfile_e):
             # rotate long tables
             # if 'scriptsize' in subline: outlines.append(r'\rotate'+'\n')
-            if '.eps' in subline:
+            if isfigure(subline):
                 outlines.append(dofigure(subline))
             else:
                 outlines.append(subline)
@@ -138,7 +170,7 @@ for line in mainlines:
         outlines.append(line.split(includestr+'{'+incfile+'}')[1])
     # don't emulateapj
     elif '{emulateapj}' in line:
-        outlines.append(r'\documentclass[manuscript]{aastex}'+'\n')
+        outlines.append(r'\documentclass[manuscript]{aastex62}'+'\n')
     elif r'\LongTables' in line:
         outlines.append('')
     # input bibliography
@@ -148,7 +180,7 @@ for line in mainlines:
         for subline in biblines:
             outlines.append(subline)
     # figures
-    elif r'.eps' in line or '.ps' in line:
+    elif isfigure(line):
         outlines.append(dofigure(line))
     else:
         outlines.append(line)
