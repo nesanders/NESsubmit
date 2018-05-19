@@ -1,4 +1,4 @@
-"""
+r"""
 This is a script to format and package a scientific paper written in latex for
 upload to the journal (using aastex) and the arXiv (assuming emulateapj).
 
@@ -55,16 +55,16 @@ def ostrip(thefile):
     Function to open a tex file and strip it of comments
     """
     outlines = []
-    f = open(thefile, 'r')
-    for line in f:
-        if line[0] != '%':
-            if '%' in line:
-                if '\%' in line or line[-1] == '%':
-                    outlines.append(line)  # these are not real comments
+    with open(thefile, 'r') as f:
+        for line in f:
+            if line[0] != '%':
+                if '%' in line:
+                    if r'\%' in line or line[-1] == '%':
+                        outlines.append(line)  # these are not real comments
+                    else:
+                        outlines.append(line.split(' %')[0]+'\n')
                 else:
-                    outlines.append(line.split(' %')[0]+'\n')
-            else:
-                outlines.append(line)
+                    outlines.append(line)
     return outlines
 
 
@@ -114,7 +114,7 @@ def dofigure(line):
 mainlines = ostrip(mainfile)
 outlines = []
 for line in mainlines:
-    if '\input' in line:
+    if r'\input' in line:
         incfile = line.split('{')[1].split('}')[0]
         # if there is no extension, assume it is a .tex
         if len(incfile.split('.')) == 1:
@@ -122,7 +122,7 @@ for line in mainlines:
         else:
             incfile_e = incfile
         # Append any text before the include
-        outlines.append(line.split('\input{'+incfile+'}')[0])
+        outlines.append(line.split(r'\input{'+incfile+'}')[0])
         # Append each line from the input file
         for subline in ostrip(incfile_e):
             # rotate long tables
@@ -132,7 +132,7 @@ for line in mainlines:
             else:
                 outlines.append(subline)
         # Append any text after the include
-        outlines.append(line.split('\input{'+incfile+'}')[1])
+        outlines.append(line.split(r'\input{'+incfile+'}')[1])
     # don't emulateapj
     elif '{emulateapj}' in line:
         outlines.append(r'\documentclass[manuscript]{aastex}'+'\n')
