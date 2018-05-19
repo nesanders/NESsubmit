@@ -114,7 +114,10 @@ def dofigure(line):
 mainlines = ostrip(mainfile)
 outlines = []
 for line in mainlines:
-    if r'\input' in line:
+    if r'\input' in line or r'\include' in line:
+        includestr = r'\input'
+        if r'\include' in line:
+            includestr = r'\include'
         incfile = line.split('{')[1].split('}')[0]
         # if there is no extension, assume it is a .tex
         if len(incfile.split('.')) == 1:
@@ -122,7 +125,7 @@ for line in mainlines:
         else:
             incfile_e = incfile
         # Append any text before the include
-        outlines.append(line.split(r'\input{'+incfile+'}')[0])
+        outlines.append(line.split(includestr+'{'+incfile+'}')[0])
         # Append each line from the input file
         for subline in ostrip(incfile_e):
             # rotate long tables
@@ -132,7 +135,7 @@ for line in mainlines:
             else:
                 outlines.append(subline)
         # Append any text after the include
-        outlines.append(line.split(r'\input{'+incfile+'}')[1])
+        outlines.append(line.split(includestr+'{'+incfile+'}')[1])
     # don't emulateapj
     elif '{emulateapj}' in line:
         outlines.append(r'\documentclass[manuscript]{aastex}'+'\n')
