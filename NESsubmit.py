@@ -207,7 +207,7 @@ with open(outfile, 'w') as f:
 
 # tar up
 os.chdir(outdir)
-os.system('tar -czf '+'ApJ.tar.gz *.tex *.eps --exclude "arxiv.tex"')
+os.system('tar --exclude arxiv.tex -czf '+'ApJ.tar.gz *.tex f[1-9]*.*')
 # readme
 with open("README", "w") as r:
     print("For ApJ, simply upload the tarball.  For the arXiv, upload "
