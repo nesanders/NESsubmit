@@ -179,5 +179,7 @@ f.close()
 os.chdir(outdir)
 os.system('tar -czf '+'ApJ.tar.gz *.tex *.eps --exclude "arxiv.tex"')
 # readme
-os.system('echo "For ApJ, simply upload the tarball.  For the arXiv, upload all the figures plus the arxiv.tex file, NOT the apj.tex" > README')
+with open("README", "w") as r:
+    print("For ApJ, simply upload the tarball.  For the arXiv, upload "
+          "all the figures plus the arxiv.tex file, NOT the apj.tex", file=r)
 os.chdir('..')
